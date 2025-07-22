@@ -1,103 +1,134 @@
+"use client";
 import Image from "next/image";
+import axios from "axios";
+import { Users, Building, Award, Search, Filter, Star, Eye, Save, TrendingUp, Bookmark } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [employees, setEmployees] = useState([]);
+  const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
+  const ratings = [1, 2, 3, 4, 5];
+  const avatarColors = [
+    "bg-gradient-to-br from-purple-500 to-pink-500",
+    "bg-gradient-to-br from-blue-500 to-cyan-500",
+    "bg-gradient-to-br from-green-500 to-emerald-500",
+    "bg-gradient-to-br from-orange-500 to-red-500",
+    "bg-gradient-to-br from-indigo-500 to-purple-500",
+    "bg-gradient-to-br from-teal-500 to-blue-500",
+  ];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const getRandomPosition = () => Math.floor(Math.random() * 4) + 1;
+  const getDepartment = () => departments[getRandomPosition()];
+  const getAvatarColor = () => avatarColors[getRandomPosition()];
+  const getRating = () => ratings[getRandomPosition()];
+
+  const renderStars = (rating) => {
+    return (
+      <div className="flex mt-2 space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+           <Star className={`${
+              star <= rating
+                ? 'text-yellow-400 fill-yellow-400'
+                : 'text-gray-300'
+            } transition-colors duration-200`}/>
+        ))}
+        <span className="text-gray-700">{rating}.0</span>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    axios
+      .get("https://dummyjson.com/users?limit=20")
+      .then((res) => {
+        setEmployees(res.data.users);
+      })
+      .catch((err) => {
+        console.error("Error fetching data", err);
+      });
+  }, []);
+
+  return (
+    <div className="mx-5 my-7 font-serif flex flex-col gap-6">
+      <div className="px-2 flex justify-between ">
+        <div className="flex gap-3 items-center">
+          <div className={`inline-flex p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl`}>
+            <Users className="text-white w-8 h-8" />
+          </div>
+          <div>
+            <div className="font-bold text-4xl">
+              Employee
+              <br /> Directory
+            </div>
+            <div className="text-gray-700">Manage your team with style</div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1.5">
+            <Building className="text-blue-600 w-6 h-6" />
+            <div className="text-gray-700 text-2xl">
+              10 <br />
+              Employees
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Award className="text-green-600 w-6 h-6" />
+            <div className="text-gray-700 text-2xl">
+              6 <br />
+              Departments
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center gap-2">
+        <div className=" w-[40%] p-2 flex items-center border-2 border-transparent focus-within:border-blue-400 rounded-md transition">
+          <Search className="text-gray-600" />
+          <input
+            className="w-full p-1 outline-none"
+            placeholder="Search by name, email, or department..."
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+        <div className="p-2 w-[20%] flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition">
+          <Filter className="text-gray-500" />
+          <div className="text-gray-700">Filters</div>
+        </div>
+      </div>
+      <div className=" mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {employees.map((employee) => (
+          <div className="flex flex-col items-center">
+            <div className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${getAvatarColor()}`}>
+              {employee.firstName[0]} {employee.lastName[0]}
+            </div>
+            <div className="font-bold mt-4">
+              {employee.firstName} {employee.lastName}
+            </div>
+            <div className="text-sm text-gray-600">{employee.email}</div>
+            <div className="mt-2 flex gap-3 items-center">
+              <label className="text-sm text-gray-500">
+                Age {employee.age}
+              </label>
+              <label className="p-1 rounded-2xl text-sm text-blue-700 bg-blue-100 font-semibold">
+                {getDepartment()}
+              </label>
+            </div>
+            <div>{renderStars(getRating())}</div>
+            <div className="mt-8 flex gap-2">
+              <button className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
+                <Eye className="w-4 h-4"/>
+                <span className="font-medium text-sm">View</span>
+              </button>
+              <button className="p-1 px-3 text-amber-600 rounded-xl flex items-center gap-2 bg-amber-50">
+                <Bookmark className="w-4 h-4"/>
+                <span className="font-medium text-sm">Bookmark</span>
+              </button>
+              <button className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
+                <TrendingUp className="w-4 h-4"/>
+                <span className="font-medium text-sm">Promote</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
