@@ -3,24 +3,25 @@ import Image from "next/image";
 import axios from "axios";
 import { Users, Building, Award, Search, Filter, Star, Eye, Save, TrendingUp, Bookmark } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useBookmark } from "@/context/BookmarkContext";
 
 export default function Home() {
+  const router=useRouter();
   const [employees, setEmployees] = useState([]);
   const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
   const ratings = [1, 2, 3, 4, 5];
+  const {toggleBookmark,bookmarked}=useBookmark();
   const avatarColors = [
     "bg-gradient-to-br from-purple-500 to-pink-500",
     "bg-gradient-to-br from-blue-500 to-cyan-500",
     "bg-gradient-to-br from-green-500 to-emerald-500",
     "bg-gradient-to-br from-orange-500 to-red-500",
-    "bg-gradient-to-br from-indigo-500 to-purple-500",
     "bg-gradient-to-br from-teal-500 to-blue-500",
   ];
 
+  const handleBookmark=(employee)=>toggleBookmark(employee);
   const getRandomPosition = () => Math.floor(Math.random() * 4) + 1;
-  const getDepartment = () => departments[getRandomPosition()];
-  const getAvatarColor = () => avatarColors[getRandomPosition()];
-  const getRating = () => ratings[getRandomPosition()];
 
   const renderStars = (rating) => {
     return (
@@ -41,7 +42,15 @@ export default function Home() {
     axios
       .get("https://dummyjson.com/users?limit=20")
       .then((res) => {
-        setEmployees(res.data.users);
+        const newRes=res.data.users.map((user,index)=>(
+          {
+            ...user,
+            avatarColor:avatarColors[getRandomPosition()],
+            department:departments[getRandomPosition()],
+            rating:ratings[getRandomPosition()],
+          }
+        ));
+        setEmployees(newRes);
       })
       .catch((err) => {
         console.error("Error fetching data", err);
@@ -96,7 +105,7 @@ export default function Home() {
       <div className=" mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {employees.map((employee) => (
           <div className="flex flex-col items-center">
-            <div className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${getAvatarColor()}`}>
+            <div className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${employee.avatarColor}`}>
               {employee.firstName[0]} {employee.lastName[0]}
             </div>
             <div className="font-bold mt-4">
@@ -108,16 +117,16 @@ export default function Home() {
                 Age {employee.age}
               </label>
               <label className="p-1 rounded-2xl text-sm text-blue-700 bg-blue-100 font-semibold">
-                {getDepartment()}
+                {employee.department}
               </label>
             </div>
-            <div>{renderStars(getRating())}</div>
+            <div>{renderStars(employee.rating)}</div>
             <div className="mt-8 flex gap-2">
-              <button className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
+              <button onClick={()=>router.push("/bookmark")} className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
                 <Eye className="w-4 h-4"/>
                 <span className="font-medium text-sm">View</span>
               </button>
-              <button className="p-1 px-3 text-amber-600 rounded-xl flex items-center gap-2 bg-amber-50">
+              <button onClick={()=>toggleBookmark(employee)} className="p-1 px-3 text-amber-600 rounded-xl flex items-center gap-2 bg-amber-50">
                 <Bookmark className="w-4 h-4"/>
                 <span className="font-medium text-sm">Bookmark</span>
               </button>
