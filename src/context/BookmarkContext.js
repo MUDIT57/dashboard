@@ -19,7 +19,7 @@ export const BookmarkProvider = ({ children }) => {
     });
   };
   return (
-    <BookmarkContext.Provider value={{ bookmarked, toggleBookmark }}>
+    <BookmarkContext.Provider value={{ bookmarked, toggleBookmark,setAllEmployees,allEmployees }}>
       {children}
     </BookmarkContext.Provider>
   );

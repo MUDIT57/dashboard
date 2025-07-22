@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import axios from "axios";
 import { Users, Building, Award, Search, Filter, Star, Eye, Save, TrendingUp, Bookmark } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -11,7 +10,7 @@ export default function Home() {
   const [employees, setEmployees] = useState([]);
   const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
   const ratings = [1, 2, 3, 4, 5];
-  const {toggleBookmark,bookmarked}=useBookmark();
+  const {toggleBookmark,setAllEmployees}=useBookmark();
   const avatarColors = [
     "bg-gradient-to-br from-purple-500 to-pink-500",
     "bg-gradient-to-br from-blue-500 to-cyan-500",
@@ -51,6 +50,7 @@ export default function Home() {
           }
         ));
         setEmployees(newRes);
+        setAllEmployees(newRes);
       })
       .catch((err) => {
         console.error("Error fetching data", err);
@@ -130,7 +130,7 @@ export default function Home() {
                 <Bookmark className="w-4 h-4"/>
                 <span className="font-medium text-sm">Bookmark</span>
               </button>
-              <button className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
+              <button onClick={()=>router.push("/chart")} className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
                 <TrendingUp className="w-4 h-4"/>
                 <span className="font-medium text-sm">Promote</span>
               </button>
