@@ -122,7 +122,7 @@ export default function Home() {
             </div>
             <div>{renderStars(employee.rating)}</div>
             <div className="mt-8 flex gap-2">
-              <button onClick={()=>router.push("/bookmark")} className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
+              <button onClick={()=>router.push(`/employee/${employee.id}`)} className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
                 <Eye className="w-4 h-4"/>
                 <span className="font-medium text-sm">View</span>
               </button>
