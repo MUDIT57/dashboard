@@ -47,7 +47,7 @@ export default function employee() {
      employee ?(
         <div className="m-6 font-serif">
       <div className="flex gap-2 items-center">
-        <ArrowLeft onClick={()=>router.push("/")}/>
+        <ArrowLeft onClick={()=>router.push("/home")}/>
         <div className="font-bold text-2xl">Employee Details</div>
       </div>
       <div className="mt-8 flex gap-4">

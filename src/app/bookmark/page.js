@@ -1,9 +1,27 @@
 "use client";
 import { Bookmark,BookmarkX,Star,Eye,TrendingUp, FolderPlus } from "lucide-react";
 import { useBookmark } from "@/context/BookmarkContext";
+import { useState } from "react";
 
 export default function bookmark() {
   const { toggleBookmark, bookmarked } = useBookmark();
+    const [promoteNotification, setPromoteNotification] = useState(null);
+    const [projectNotification, setProjectNotification] = useState(null);
+
+      const handlePromote = (employee) => {
+    setPromoteNotification(
+      `${employee.firstName} ${employee.lastName} has been promoted!`
+    );
+    setTimeout(() => promoteNotification(null), 3000);
+  };
+
+    const handleProject = (employee) => {
+    setProjectNotification(
+      `${employee.firstName} ${employee.lastName} has been assigned a project!`
+    );
+    setTimeout(() => projectNotification(null), 3000);
+  };
+
     const renderStars = (rating) => {
     return (
       <div className="flex mt-2 space-x-1">
@@ -20,6 +38,16 @@ export default function bookmark() {
   };
   return (
     <div className="mx-5 my-7 font-serif flex flex-col gap-6">
+        {promoteNotification && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade">
+          {promoteNotification}
+        </div>
+      )}
+      {projectNotification && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade">
+          {projectNotification}
+        </div>
+      )}
       <div className="px-2 flex justify-between ">
         <div className="flex gap-3 items-center">
           <div
@@ -64,11 +92,11 @@ export default function bookmark() {
                 <BookmarkX className="w-4 h-4"/>
                 <span className="font-medium text-sm">Remove</span>
               </button>
-              <button className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
+              <button onClick={() => handlePromote(employee)} className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
                 <TrendingUp className="w-4 h-4"/>
                 <span className="font-medium text-sm">Promote</span>
               </button>
-              <button className="p-1 px-3 text-purple-600 rounded-xl flex items-center gap-2 bg-purple-50">
+              <button onClick={() => handleProject(employee)} className="p-1 px-3 text-purple-600 rounded-xl flex items-center gap-2 bg-purple-50">
                 <FolderPlus className="w-4 h-4"/>
                 <span className="font-medium text-sm">Assign to Project</span>
               </button>
