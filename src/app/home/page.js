@@ -11,71 +11,27 @@ import {
   TrendingUp,
   Bookmark,
   ChevronDown,
-  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBookmark } from "@/context/BookmarkContext";
+import { departments,ratings,avatarColors,getRandomPosition } from "@/utils/constants";
+import { setUsers } from "../redux/actions/userActions";
+import { useDispatch,useSelector } from "react-redux";
 
 export default function Home() {
   const router = useRouter();
-  const [employees, setEmployees] = useState([]);
-  const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
-  const ratings = [1, 2, 3, 4, 5];
   const { toggleBookmark, setAllEmployees, bookmarked } = useBookmark();
   const [records, setRecords] = useState([]);
-  const avatarColors = [
-    "bg-gradient-to-br from-purple-500 to-pink-500",
-    "bg-gradient-to-br from-blue-500 to-cyan-500",
-    "bg-gradient-to-br from-green-500 to-emerald-500",
-    "bg-gradient-to-br from-orange-500 to-red-500",
-    "bg-gradient-to-br from-teal-500 to-blue-500",
-  ];
-  const [selectedDepartments, setSelectedDepartments] = useState([]);
-  const [selectedRatings, setSelectedRatings] = useState([]);
-  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
-  const [showRatingFilter, setShowRatingFilter] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  const handleBookmark = (employee) => toggleBookmark(employee);
-  const getRandomPosition = () => Math.floor(Math.random() * 4) + 1;
+  const dispatch=useDispatch();
+  const employees=useSelector((state)=>state.user.employees)||[];
 
-  const handleSearch = (term) => {
-    const lowerTerm = term.toLowerCase();
-
-    const filtered = employees.filter((emp) => {
-      const matchesText =
-        emp.firstName.toLowerCase().includes(lowerTerm) ||
-        emp.lastName.toLowerCase().includes(lowerTerm) ||
-        emp.email.toLowerCase().includes(lowerTerm) ||
-        emp.department.toLowerCase().includes(lowerTerm);
-
-      const matchesDept =
-        selectedDepartments.length === 0 ||
-        selectedDepartments.includes(emp.department);
-
-      const matchesRating =
-        selectedRatings.length === 0 || selectedRatings.includes(emp.rating);
-
-      return matchesText && matchesDept && matchesRating;
-    });
-
-    setRecords(filtered);
-  };
-
-  const toggleDepartment = (dept) => {
-    const newSelection = selectedDepartments.includes(dept)
-      ? selectedDepartments.filter((d) => d !== dept)
-      : [...selectedDepartments, dept];
-    setSelectedDepartments(newSelection);
-  };
-
-  const toggleRating = (rating) => {
-    const newSelection = selectedRatings.includes(rating)
-      ? selectedRatings.filter((r) => r !== rating)
-      : [...selectedRatings, rating];
-    setSelectedRatings(newSelection);
-  };
+  useEffect(()=>{
+    setAllEmployees(employees);
+    setRecords(employees);
+  },[employees]);
 
   const handlePromote = (employee) => {
     setNotification(
@@ -83,10 +39,6 @@ export default function Home() {
     );
     setTimeout(() => setNotification(null), 3000);
   };
-
-  useEffect(() => {
-    handleSearch("");
-  }, [selectedDepartments, selectedRatings]);
 
   const isBookmarkedEmployee = (id) => {
     if (!bookmarked) return false;
@@ -113,6 +65,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if(employees.length>0) return ;
     axios
       .get("https://dummyjson.com/users?limit=20")
       .then((res) => {
@@ -122,13 +75,13 @@ export default function Home() {
           department: departments[getRandomPosition()],
           rating: ratings[getRandomPosition()],
         }));
-        setEmployees(newRes);
-        setAllEmployees(newRes);
-        setRecords(newRes);
+        dispatch(setUsers(newRes));
+
       })
       .catch((err) => {
         console.error("Error fetching data", err);
       });
+      console.log("fetched");
   }, []);
 
   return (
@@ -191,102 +144,22 @@ export default function Home() {
           <Search className="text-gray-600" />
           <input
             className="w-full p-1 outline-none"
-            onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search by name, email, or department..."
           />
         </div>
 
-        <div className="relative">
-          <div
-            className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer"
-            onClick={() => setShowDepartmentFilter(!showDepartmentFilter)}
-          >
-            <Filter className="text-gray-500" />
-            <div className="text-gray-700">Department</div>
-            <ChevronDown className="text-gray-500 w-4 h-4" />
-          </div>
-
-          {showDepartmentFilter && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 w-48">
-              {departments.map((dept) => (
-                <div
-                  key={dept}
-                  className="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                  onClick={() => toggleDepartment(dept)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDepartments.includes(dept)}
-                    onChange={() => {}}
-                    className="w-4 h-4"
-                  />
-                  <span>{dept}</span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer">
+          <Filter className="text-gray-500" />
+          <div className="text-gray-700">Department</div>
+          <ChevronDown className="text-gray-500 w-4 h-4" />
         </div>
 
-        <div className="relative">
-          <div
-            className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer"
-            onClick={() => setShowRatingFilter(!showRatingFilter)}
-          >
-            <Star className="text-gray-500 w-4 h-4" />
-            <div className="text-gray-700">Rating</div>
-            <ChevronDown className="text-gray-500 w-4 h-4" />
-          </div>
-
-          {showRatingFilter && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 w-48">
-              {ratings.map((rating) => (
-                <div
-                  key={rating}
-                  className="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                  onClick={() => toggleRating(rating)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedRatings.includes(rating)}
-                    onChange={() => {}}
-                    className="w-4 h-4"
-                  />
-                  <span>{rating} Stars</span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer">
+          <Star className="text-gray-500 w-4 h-4" />
+          <div className="text-gray-700">Rating</div>
+          <ChevronDown className="text-gray-500 w-4 h-4" />
         </div>
       </div>
-
-      {(selectedDepartments.length > 0 || selectedRatings.length > 0) && (
-        <div className="flex flex-wrap gap-2 px-2">
-          {selectedDepartments.map((dept) => (
-            <span
-              key={dept}
-              className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-            >
-              {dept}
-              <X
-                className="w-3 h-3 cursor-pointer"
-                onClick={() => toggleDepartment(dept)}
-              />
-            </span>
-          ))}
-          {selectedRatings.map((rating) => (
-            <span
-              key={rating}
-              className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-            >
-              {rating} Stars
-              <X
-                className="w-3 h-3 cursor-pointer"
-                onClick={() => toggleRating(rating)}
-              />
-            </span>
-          ))}
-        </div>
-      )}
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {records.map((employee) => (
