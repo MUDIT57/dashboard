@@ -6,7 +6,7 @@ import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 
 export default function SimpleAnalytics() {
-  const { allEmployees } = useBookmark();
+  const { EmployeesContext } = useBookmark();
 
   const getDepartmentRatings = () => {
     const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
@@ -19,7 +19,7 @@ export default function SimpleAnalytics() {
       };
     });
 
-    allEmployees.forEach(employee => {
+    EmployeesContext.forEach(employee => {
       if (departments.includes(employee.department) && employee.rating) {
         departmentStats[employee.department].count++;
         departmentStats[employee.department].totalRating += employee.rating;

@@ -62,7 +62,7 @@ export default function bookmark() {
             </div>
           </div>
         </div>
-        <div className="text-gray-700 text-2xl">6 Bookmarked Employees</div>
+        <div className="text-gray-700 text-2xl">{bookmarked.length} Bookmarked Employees</div>
       </div>
       <div className=" mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols- gap-8">
         {bookmarked.map((employee) => (

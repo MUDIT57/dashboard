@@ -15,23 +15,78 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBookmark } from "@/context/BookmarkContext";
-import { departments,ratings,avatarColors,getRandomPosition } from "@/utils/constants";
-import { setUsers } from "../redux/actions/userActions";
-import { useDispatch,useSelector } from "react-redux";
+import useDebounce from "@/hooks/useDebounce";
+import {
+  departments,
+  ratings,
+  avatarColors,
+  getRandomPosition,
+} from "@/utils/constants";
+import { setTotalUsers, setUsersByPage,setCurrentPage } from "../redux/actions/userActions";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Home() {
   const router = useRouter();
-  const { toggleBookmark, setAllEmployees, bookmarked } = useBookmark();
-  const [records, setRecords] = useState([]);
+  const { toggleBookmark, setEmployeesContext, bookmarked } = useBookmark();
+  const [filtered, setfiltered] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
+  const [showRatingFilter, setShowRatingFilter] = useState(false);
+  const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  // const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
-  const dispatch=useDispatch();
-  const employees=useSelector((state)=>state.user.employees)||[];
+  const dispatch = useDispatch();
+  // const [employees,setEmployees]=useState([]);
+  const currentPage = useSelector((state) => state.user.currentPage);
+  const maxLimit = useSelector((state) => state.user.total);
+  const employees = useSelector((state) => state.user.pages[currentPage]) || [];
+  const debounceTerm = useDebounce(searchTerm, 1000);
 
-  useEffect(()=>{
-    setAllEmployees(employees);
-    setRecords(employees);
-  },[employees]);
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [searchTerm, selectedDepartments, selectedRatings]);
+
+  useEffect(() => {
+    setEmployeesContext(employees);
+    setfiltered(employees);
+  }, [employees]);
+
+  const handleNext = () => {
+    if (currentPage < Math.ceil(maxLimit / pageSize))
+      dispatch(setCurrentPage(currentPage + 1));
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) dispatch(setCurrentPage(currentPage - 1));
+  };
+
+  useEffect(() => {
+    if (employees.length === 0) return;
+    handleSearch(debounceTerm);
+  }, [debounceTerm]);
+
+  const toggleDepartment = (dep) => {a
+    const isPresent = selectedDepartments.includes(dep);
+    if (isPresent) {
+      setSelectedDepartments((prev) =>
+        prev.filter((department) => department !== dep)
+      );
+    } else {
+      setSelectedDepartments([...selectedDepartments, dep]);
+    }
+  };
+
+  const toggleRating = (rate) => {
+    const isPresent = selectedRatings.includes(rate);
+    if (isPresent) {
+      setSelectedRatings((prev) => prev.filter((rating) => rating !== rate));
+    } else {
+      setSelectedRatings([...selectedRatings, rate]);
+    }
+  };
 
   const handlePromote = (employee) => {
     setNotification(
@@ -44,6 +99,28 @@ export default function Home() {
     if (!bookmarked) return false;
     if (bookmarked.find((emp) => emp.id === id)) return true;
     else return false;
+  };
+
+  const handleSearch = (term) => {
+    const lowerTerm = term.toLowerCase();
+    const result = employees.filter((employee) => {
+      const srch =
+        employee.firstName.toLowerCase().includes(lowerTerm) ||
+        employee.lastName.toLowerCase().includes(lowerTerm) ||
+        employee.email.toLowerCase().includes(lowerTerm) ||
+        employee.department.toLowerCase().includes(lowerTerm);
+
+      const isDepPresent =
+        selectedDepartments.length === 0 ||
+        selectedDepartments.includes(employee.department);
+
+      const isRatingPresent =
+        selectedRatings.length === 0 ||
+        selectedRatings.includes(employee.rating);
+
+      return srch && isDepPresent && isRatingPresent;
+    });
+    setfiltered(result);
   };
 
   const renderStars = (rating) => {
@@ -65,9 +142,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if(employees.length>0) return ;
+    // console.log("current page: ",currentPage);
+    if (employees.length > 0) return;
+    const skip = (currentPage - 1) * pageSize;
     axios
-      .get("https://dummyjson.com/users?limit=20")
+      .get(`https://dummyjson.com/users?limit=${pageSize}&skip=${skip}`)
       .then((res) => {
         const newRes = res.data.users.map((user, index) => ({
           ...user,
@@ -75,14 +154,21 @@ export default function Home() {
           department: departments[getRandomPosition()],
           rating: ratings[getRandomPosition()],
         }));
-        dispatch(setUsers(newRes));
-
+        dispatch(setUsersByPage(currentPage, newRes));
+        dispatch(setTotalUsers(res.data.total));
+        // setEmployees(newRes);
       })
       .catch((err) => {
         console.error("Error fetching data", err);
       });
-      console.log("fetched");
-  }, []);
+    console.log("fetched");
+  }, [currentPage]);
+
+  useEffect(() => {
+    handleSearch("");
+  }, [selectedDepartments, selectedRatings]);
+
+  // const paginatedEmployees=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize); ---> for client side pagination
 
   return (
     <div className="mx-5 my-7 font-serif flex flex-col gap-6">
@@ -111,14 +197,14 @@ export default function Home() {
           <div className="flex items-center gap-1.5">
             <Building className="text-blue-600 w-6 h-6" />
             <div className="text-gray-700 text-2xl">
-              10 <br />
+              {maxLimit} <br />
               Employees
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <Award className="text-green-600 w-6 h-6" />
             <div className="text-gray-700 text-2xl">
-              6 <br />
+              {departments.length} <br />
               Departments
             </div>
           </div>
@@ -145,24 +231,69 @@ export default function Home() {
           <input
             className="w-full p-1 outline-none"
             placeholder="Search by name, email, or department..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        <div className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer">
-          <Filter className="text-gray-500" />
-          <div className="text-gray-700">Department</div>
-          <ChevronDown className="text-gray-500 w-4 h-4" />
+        <div className="relative">
+          <div
+            onClick={() => setShowDepartmentFilter((prev) => !prev)}
+            className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer"
+          >
+            <Filter className="text-gray-500" />
+            <div className="text-gray-700">Department</div>
+            <ChevronDown className="text-gray-500 w-4 h-4" />
+          </div>
+
+          {showDepartmentFilter && (
+            <div className="top-12 justify-between absolute flex flex-col bg-white">
+              {departments.map((department) => {
+                return (
+                  <div className="px-3 flex flex-row gap-3">
+                    <input
+                      onClick={() => toggleDepartment(department)}
+                      checked={selectedDepartments.includes(department)}
+                      type="checkbox"
+                    />
+                    <label>{department}</label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer">
-          <Star className="text-gray-500 w-4 h-4" />
-          <div className="text-gray-700">Rating</div>
-          <ChevronDown className="text-gray-500 w-4 h-4" />
+        <div className="relative">
+          <div
+            onClick={() => setShowRatingFilter((prev) => !prev)}
+            className="p-2 w-40 flex gap-2 items-center border-2 border-transparent hover:border-blue-400 rounded-md transition cursor-pointer"
+          >
+            <Star className="text-gray-500 w-4 h-4" />
+            <div className="text-gray-700">Rating</div>
+            <ChevronDown className="text-gray-500 w-4 h-4" />
+          </div>
+          {showRatingFilter && (
+            <div className="top-12 justify-between absolute flex flex-col bg-white">
+              {ratings.map((rating) => {
+                return (
+                  <div className="px-3 flex flex-row gap-3">
+                    <input
+                      onClick={() => toggleRating(rating)}
+                      checked={selectedRatings.includes(rating)}
+                      type="checkbox"
+                    />
+                    <label>{rating}</label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {records.map((employee) => (
+        {filtered.map((employee) => (
           <div key={employee.id} className="flex flex-col items-center">
             <div
               className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${employee.avatarColor}`}
@@ -211,6 +342,25 @@ export default function Home() {
             </div>
           </div>
         ))}
+      </div>
+      <div className="flex gap-4 justify-center">
+        <button
+          className="bg-gray-200 px-2 rounded font-semibold disabled:opacity-50"
+          onClick={() => handlePrev()}
+          disabled={currentPage === 1}
+        >
+          Prev
+        </button>
+        <label>
+          {currentPage} of {Math.ceil(maxLimit / pageSize)}
+        </label>
+        <button
+          className="bg-gray-200 px-2 rounded font-semibold disabled:opacity-50"
+          onClick={() => handleNext()}
+          disabled={currentPage === Math.ceil(maxLimit / pageSize)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

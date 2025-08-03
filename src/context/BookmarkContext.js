@@ -6,7 +6,7 @@ const BookmarkContext = createContext();
 export const useBookmark = () => useContext(BookmarkContext);
 
 export const BookmarkProvider = ({ children }) => {
-  const [allEmployees,setAllEmployees]=useState([]);
+  const [EmployeesContext,setEmployeesContext]=useState([]);
   const [bookmarked, setBookmarked] = useState([]);
   const toggleBookmark = (employee) => {
     setBookmarked((prev) => {
@@ -19,7 +19,7 @@ export const BookmarkProvider = ({ children }) => {
     });
   };
   return (
-    <BookmarkContext.Provider value={{ bookmarked, toggleBookmark,setAllEmployees,allEmployees }}>
+    <BookmarkContext.Provider value={{ bookmarked, toggleBookmark,setEmployeesContext,EmployeesContext }}>
       {children}
     </BookmarkContext.Provider>
   );
