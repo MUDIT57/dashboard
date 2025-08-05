@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { BookmarkProvider } from "../context/BookmarkContext";
-import ReduxProvider from "./ReduxProvider";
+import ReduxProvider from "../components/ReduxProvider";
+import GlobalFetchWrapper from "@/components/GlobalFetchWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReduxProvider>
+          <GlobalFetchWrapper/>
         <BookmarkProvider>{children}</BookmarkProvider>
         </ReduxProvider>
       </body>

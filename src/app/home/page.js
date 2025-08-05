@@ -1,5 +1,4 @@
 "use client";
-import axios from "axios";
 import {
   Users,
   Building,
@@ -19,15 +18,14 @@ import useDebounce from "@/hooks/useDebounce";
 import {
   departments,
   ratings,
-  avatarColors,
-  getRandomPosition,
 } from "@/utils/constants";
-import { setTotalUsers, setUsersByPage,setCurrentPage } from "../redux/actions/userActions";
+import {setCurrentPage } from "@/redux/actions/userActions";
 import { useDispatch, useSelector } from "react-redux";
+import employee from "../employee/[id]/page";
 
 export default function Home() {
   const router = useRouter();
-  const { toggleBookmark, setEmployeesContext, bookmarked } = useBookmark();
+  const { toggleBookmark, bookmarked } = useBookmark();
   const [filtered, setfiltered] = useState([]);
   const [notification, setNotification] = useState(null);
   const [showDepartmentFilter, setShowDepartmentFilter] = useState(false);
@@ -35,28 +33,21 @@ export default function Home() {
   const [selectedDepartments, setSelectedDepartments] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
   const dispatch = useDispatch();
-  // const [employees,setEmployees]=useState([]);
   const currentPage = useSelector((state) => state.user.currentPage);
   const maxLimit = useSelector((state) => state.user.total);
-  const employees = useSelector((state) => state.user.pages[currentPage]) || [];
+  const employees = useSelector((state) => state.user.employees) || [];
   const debounceTerm = useDebounce(searchTerm, 1000);
 
-  // useEffect(() => {
-  //   setCurrentPage(1);
-  // }, [searchTerm, selectedDepartments, selectedRatings]);
 
   useEffect(() => {
-    setEmployeesContext(employees);
     setfiltered(employees);
   }, [employees]);
 
   const handleNext = () => {
-    if (currentPage < Math.ceil(maxLimit / pageSize))
-      dispatch(setCurrentPage(currentPage + 1));
+    if (currentPage < totalPages) dispatch(setCurrentPage(currentPage + 1));
   };
 
   const handlePrev = () => {
@@ -68,7 +59,7 @@ export default function Home() {
     handleSearch(debounceTerm);
   }, [debounceTerm]);
 
-  const toggleDepartment = (dep) => {a
+  const toggleDepartment = (dep) => {
     const isPresent = selectedDepartments.includes(dep);
     if (isPresent) {
       setSelectedDepartments((prev) =>
@@ -110,15 +101,20 @@ export default function Home() {
         employee.email.toLowerCase().includes(lowerTerm) ||
         employee.department.toLowerCase().includes(lowerTerm);
 
-      const isDepPresent =
-        selectedDepartments.length === 0 ||
+      return srch;
+    });
+    setfiltered(result);
+  };
+
+  const handleFilter = () => {
+    const result = employees.filter((employee) => {
+      const isDeptPresent =
+        selectedDepartments.length == 0 ||
         selectedDepartments.includes(employee.department);
-
       const isRatingPresent =
-        selectedRatings.length === 0 ||
+        selectedRatings.length == 0 ||
         selectedRatings.includes(employee.rating);
-
-      return srch && isDepPresent && isRatingPresent;
+      return isDeptPresent && isRatingPresent;
     });
     setfiltered(result);
   };
@@ -142,33 +138,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // console.log("current page: ",currentPage);
-    if (employees.length > 0) return;
-    const skip = (currentPage - 1) * pageSize;
-    axios
-      .get(`https://dummyjson.com/users?limit=${pageSize}&skip=${skip}`)
-      .then((res) => {
-        const newRes = res.data.users.map((user, index) => ({
-          ...user,
-          avatarColor: avatarColors[getRandomPosition()],
-          department: departments[getRandomPosition()],
-          rating: ratings[getRandomPosition()],
-        }));
-        dispatch(setUsersByPage(currentPage, newRes));
-        dispatch(setTotalUsers(res.data.total));
-        // setEmployees(newRes);
-      })
-      .catch((err) => {
-        console.error("Error fetching data", err);
-      });
-    console.log("fetched");
-  }, [currentPage]);
-
-  useEffect(() => {
-    handleSearch("");
+    handleFilter();
   }, [selectedDepartments, selectedRatings]);
 
-  // const paginatedEmployees=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize); ---> for client side pagination
+  const paginatedEmployees=filtered.slice((currentPage-1)*pageSize,currentPage*pageSize); 
+    const totalPages = Math.ceil(filtered.length / pageSize);
 
   return (
     <div className="mx-5 my-7 font-serif flex flex-col gap-6">
@@ -177,7 +151,6 @@ export default function Home() {
           {notification}
         </div>
       )}
-
       <div className="px-2 flex justify-between ">
         <div className="flex gap-3 items-center">
           <div
@@ -293,7 +266,7 @@ export default function Home() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {filtered.map((employee) => (
+        {paginatedEmployees.map((employee) => (
           <div key={employee.id} className="flex flex-col items-center">
             <div
               className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${employee.avatarColor}`}
@@ -352,12 +325,12 @@ export default function Home() {
           Prev
         </button>
         <label>
-          {currentPage} of {Math.ceil(maxLimit / pageSize)}
+          {currentPage} of {totalPages}
         </label>
         <button
           className="bg-gray-200 px-2 rounded font-semibold disabled:opacity-50"
           onClick={() => handleNext()}
-          disabled={currentPage === Math.ceil(maxLimit / pageSize)}
+          disabled={totalPages === currentPage}
         >
           Next
         </button>

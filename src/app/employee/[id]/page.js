@@ -1,5 +1,5 @@
 "use client";
-import { useBookmark } from "@/context/BookmarkContext";
+import { useSelector } from "react-redux";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,15 +15,14 @@ import {
 
 export default function employee() {
   const { id } = useParams();
-  const { allEmployees } = useBookmark();
   const [activeTab, setActiveTab] = useState("overview");
   const router=useRouter();
   const [employee,setEmployee]=useState(null);
+  const employees=useSelector((state)=>state.user.employees);
   useEffect(()=>{
-      setEmployee(allEmployees.find((emp)=>emp.id===parseInt(id)));
-      console.log(allEmployees);
-      console.log(employee);
+    setEmployee(employees.find((emp)=>emp.id===parseInt(id)));
   },[])
+
 
 
   const renderStars = (rating) => {

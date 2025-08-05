@@ -1,12 +1,12 @@
 "use client";
-import { useBookmark } from "@/context/BookmarkContext";
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
+import { useSelector } from "react-redux";
 
 Chart.register(...registerables);
 
 export default function SimpleAnalytics() {
-  const { EmployeesContext } = useBookmark();
+  const employees=useSelector((state)=>state.user.employees)||[];
 
   const getDepartmentRatings = () => {
     const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
@@ -19,7 +19,7 @@ export default function SimpleAnalytics() {
       };
     });
 
-    EmployeesContext.forEach(employee => {
+    employees.forEach(employee => {
       if (departments.includes(employee.department) && employee.rating) {
         departmentStats[employee.department].count++;
         departmentStats[employee.department].totalRating += employee.rating;

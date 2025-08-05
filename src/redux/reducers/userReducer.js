@@ -1,19 +1,25 @@
 const initialState={
-    pages:{},
+    // pages:{},
+    employees:[],
     currentPage:1,
     total:0,
 };
 
 const userReducer=(state=initialState,action)=>{
     switch(action.type){
-        case "SET_USERS_BY_PAGE":
+        case "SET_ALL_EMPLOYEES":
             return{
                 ...state,
-                pages:{
-                    ...state.pages,
-                    [action.payload.page]:action.payload.users
-                }
-            };
+                employees:action.payload
+            }
+        // case "SET_USERS_BY_PAGE":
+        //     return{
+        //         ...state,
+        //         pages:{
+        //             ...state.pages,
+        //             [action.payload.page]:action.payload.users
+        //         }
+        //     };
         case "SET_CURRENT_PAGE":
             return{
                 ...state,
