@@ -22,9 +22,11 @@ import {
 import {setCurrentPage } from "@/redux/actions/userActions";
 import { useDispatch, useSelector } from "react-redux";
 import employee from "../employee/[id]/page";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const router = useRouter();
+  const {status}=useSession();
   const { toggleBookmark, bookmarked } = useBookmark();
   const [filtered, setfiltered] = useState([]);
   const [notification, setNotification] = useState(null);
@@ -40,6 +42,12 @@ export default function Home() {
   const maxLimit = useSelector((state) => state.user.total);
   const employees = useSelector((state) => state.user.employees) || [];
   const debounceTerm = useDebounce(searchTerm, 1000);
+  
+  useEffect(()=>{
+    if(status==="unauthenticated"){
+      router.push("./auth");
+    }
+  },[status]);
 
 
   useEffect(() => {

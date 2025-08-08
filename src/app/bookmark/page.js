@@ -1,36 +1,55 @@
 "use client";
-import { Bookmark,BookmarkX,Star,Eye,TrendingUp, FolderPlus } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkX,
+  Star,
+  Eye,
+  TrendingUp,
+  FolderPlus,
+} from "lucide-react";
 import { useBookmark } from "@/context/BookmarkContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function bookmark() {
+  const router = useRouter();
   const { toggleBookmark, bookmarked } = useBookmark();
-    const [promoteNotification, setPromoteNotification] = useState(null);
-    const [projectNotification, setProjectNotification] = useState(null);
+  const [promoteNotification, setPromoteNotification] = useState(null);
+  const [projectNotification, setProjectNotification] = useState(null);
 
-      const handlePromote = (employee) => {
+  const { status } = useSession();
+  const handlePromote = (employee) => {
     setPromoteNotification(
       `${employee.firstName} ${employee.lastName} has been promoted!`
     );
     setTimeout(() => promoteNotification(null), 3000);
   };
 
-    const handleProject = (employee) => {
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("./auth");
+    }
+  }, [status]);
+
+  const handleProject = (employee) => {
     setProjectNotification(
       `${employee.firstName} ${employee.lastName} has been assigned a project!`
     );
     setTimeout(() => projectNotification(null), 3000);
   };
 
-    const renderStars = (rating) => {
+  const renderStars = (rating) => {
     return (
       <div className="flex mt-2 space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
-           <Star className={`${
+          <Star
+            className={`${
               star <= rating
-                ? 'text-yellow-400 fill-yellow-400'
-                : 'text-gray-300'
-            } transition-colors duration-200`}/>
+                ? "text-yellow-400 fill-yellow-400"
+                : "text-gray-300"
+            } transition-colors duration-200`}
+          />
         ))}
         <span className="text-gray-700">{rating}.0</span>
       </div>
@@ -38,7 +57,7 @@ export default function bookmark() {
   };
   return (
     <div className="mx-5 my-7 font-serif flex flex-col gap-6">
-        {promoteNotification && (
+      {promoteNotification && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50 animate-fade">
           {promoteNotification}
         </div>
@@ -62,12 +81,16 @@ export default function bookmark() {
             </div>
           </div>
         </div>
-        <div className="text-gray-700 text-2xl">{bookmarked.length} Bookmarked Employees</div>
+        <div className="text-gray-700 text-2xl">
+          {bookmarked.length} Bookmarked Employees
+        </div>
       </div>
       <div className=" mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols- gap-8">
         {bookmarked.map((employee) => (
           <div className="flex flex-col items-center">
-            <div className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${employee.avatarColor}`}>
+            <div
+              className={`h-13 w-13 justify-center items-center text-white p-2 rounded-xl inline-flex bg-gradient-to-r ${employee.avatarColor}`}
+            >
               {employee.firstName[0]} {employee.lastName[0]}
             </div>
             <div className="font-bold mt-4">
@@ -84,20 +107,32 @@ export default function bookmark() {
             </div>
             <div>{renderStars(employee.rating)}</div>
             <div className="mt-8 flex gap-2">
-              <button onClick={()=>router.push("/bookmark")} className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50">
-                <Eye className="w-4 h-4"/>
+              <button
+                onClick={() => router.push("/bookmark")}
+                className=" p-1 px-3 text-blue-600 rounded-xl flex items-center gap-2 bg-blue-50"
+              >
+                <Eye className="w-4 h-4" />
                 <span className="font-medium text-sm">View</span>
               </button>
-              <button onClick={()=>toggleBookmark(employee)} className="p-1 px-3 text-red-600 rounded-xl flex items-center gap-2 bg-red-50">
-                <BookmarkX className="w-4 h-4"/>
+              <button
+                onClick={() => toggleBookmark(employee)}
+                className="p-1 px-3 text-red-600 rounded-xl flex items-center gap-2 bg-red-50"
+              >
+                <BookmarkX className="w-4 h-4" />
                 <span className="font-medium text-sm">Remove</span>
               </button>
-              <button onClick={() => handlePromote(employee)} className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50">
-                <TrendingUp className="w-4 h-4"/>
+              <button
+                onClick={() => handlePromote(employee)}
+                className="p-1 px-3 text-green-600 rounded-xl flex items-center gap-2 bg-green-50"
+              >
+                <TrendingUp className="w-4 h-4" />
                 <span className="font-medium text-sm">Promote</span>
               </button>
-              <button onClick={() => handleProject(employee)} className="p-1 px-3 text-purple-600 rounded-xl flex items-center gap-2 bg-purple-50">
-                <FolderPlus className="w-4 h-4"/>
+              <button
+                onClick={() => handleProject(employee)}
+                className="p-1 px-3 text-purple-600 rounded-xl flex items-center gap-2 bg-purple-50"
+              >
+                <FolderPlus className="w-4 h-4" />
                 <span className="font-medium text-sm">Assign to Project</span>
               </button>
             </div>

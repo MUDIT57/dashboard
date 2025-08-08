@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Star,
   Mail,
@@ -16,14 +17,17 @@ import {
 export default function employee() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
-  const router=useRouter();
-  const [employee,setEmployee]=useState(null);
-  const employees=useSelector((state)=>state.user.employees);
-  useEffect(()=>{
-    setEmployee(employees.find((emp)=>emp.id===parseInt(id)));
-  },[])
+  const router = useRouter();
+  const [employee, setEmployee] = useState(null);
+  const employees = useSelector((state) => state.user.employees);
+  const { status } = useSession();
+  useEffect(() => {
+    setEmployee(employees.find((emp) => emp.id === parseInt(id)));
+  }, []);
 
-
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/auth");
+  }, [status]);
 
   const renderStars = (rating) => {
     return (
@@ -42,11 +46,10 @@ export default function employee() {
     );
   };
 
-  return (
-     employee ?(
-        <div className="m-6 font-serif">
+  return employee ? (
+    <div className="m-6 font-serif">
       <div className="flex gap-2 items-center">
-        <ArrowLeft onClick={()=>router.push("/home")}/>
+        <ArrowLeft onClick={() => router.push("/home")} />
         <div className="font-bold text-2xl">Employee Details</div>
       </div>
       <div className="mt-8 flex gap-4">
@@ -232,7 +235,8 @@ export default function employee() {
           )}
         </div>
       </div>
-    </div>):
-    (<>Employee not Found</>)
+    </div>
+  ) : (
+    <>Employee not Found</>
   );
 }

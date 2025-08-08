@@ -2,11 +2,21 @@
 import { Bar } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 Chart.register(...registerables);
 
 export default function SimpleAnalytics() {
   const employees=useSelector((state)=>state.user.employees)||[];
+  const router=useRouter();
+  const {status}=useSession();
+
+  useEffect(()=>{
+    if(status==="unauthenticated")
+      router.push("/auth")
+  },[status])
 
   const getDepartmentRatings = () => {
     const departments = ["HR", "Engineering", "Marketing", "Sales", "Finance"];
